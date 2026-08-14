@@ -1,4 +1,4 @@
-# KomiAI — Resume Wheel Interview Practice Platform
+# KomiAI — Resume Wheel Interview Practice Platform(work in progress)
 
 **Speak better. Answer smarter. Get interview-ready.**
 
