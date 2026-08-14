@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'Outfit', sans-serif;
+    --font-mono: 'Space Grotesk', monospace;
+  }
+}
+
+/* Custom aesthetics for KomiAI - Premium Blue & Black SaaS Theme */
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-mono-header {
+  font-family: var(--font-mono);
+}
+
+/* Electric Blue & Cyan aesthetic glow effects */
+.anime-glow-blue {
+  box-shadow: 0 0 30px -5px rgba(59, 130, 246, 0.4);
+}
+
+.anime-glow-cyan {
+  box-shadow: 0 0 30px -5px rgba(6, 182, 212, 0.4);
+}
+
+.anime-card-border {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.anime-card-border:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 25px rgba(59, 130, 246, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Speech bubble tail effect */
+.speech-bubble-tail {
+  position: relative;
+}
+
+.speech-bubble-tail::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 24px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(17, 22, 34, 0.95);
+}
+
+/* Shimmer animation for card shuffle */
+@keyframes card-shimmer {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.animate-shimmer {
+  animation: card-shimmer 0.4s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #07090e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
