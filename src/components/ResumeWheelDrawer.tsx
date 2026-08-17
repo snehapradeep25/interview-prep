@@ -204,25 +204,24 @@ export const ResumeWheelDrawer: React.FC<ResumeWheelDrawerProps> = ({
 
       </div>
 
-      {/* Center Wheel Drawer Display */}
-      <div className="w-full flex-1 flex flex-col items-center justify-center my-6 min-h-[260px]">
-        <div className="w-full bg-[#111622] border border-blue-500/30 rounded-[2.5rem] p-8 sm:p-12 text-center space-y-6 shadow-2xl relative overflow-hidden anime-glow-blue">
+      {/* Center Wheel Drawer Display with 3D Depth */}
+      <div className="w-full flex-1 flex flex-col items-center justify-center my-6 min-h-[280px] wheel-stage-3d">
+        <div className="w-full bg-[#111622] border border-blue-500/40 rounded-[2.5rem] p-8 sm:p-12 text-center space-y-6 shadow-2xl relative overflow-hidden card-3d anime-glow-blue preserve-3d">
           
-          <div className="tracking-[0.25em] text-[11px] font-extrabold uppercase text-cyan-400 font-mono flex items-center justify-center gap-2">
-            <span className={`w-2.5 h-2.5 rounded-full ${isSpinning ? 'bg-cyan-400 animate-ping' : 'bg-blue-500'}`} />
-            <span>{isSpinning ? 'SPINNING WHEEL (6 SEC)...' : 'TOPIC'}</span>
+          <div className="tracking-[0.25em] text-[11px] font-extrabold uppercase text-cyan-400 font-mono flex items-center justify-center gap-2 card-3d-pop">
+            <span className={`w-3 h-3 rounded-full wheel-hub-3d ${isSpinning ? 'bg-cyan-400 animate-ping' : 'bg-blue-500'}`} />
+            <span>{isSpinning ? 'SPINNING 3D WHEEL (6 SEC)...' : 'RESUME INTERVIEW TOPIC'}</span>
           </div>
 
-
-          <div className={`transition-all duration-150 transform ${isSpinning ? 'scale-[0.98] opacity-80' : 'scale-100 opacity-100'}`}>
-            <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl text-white font-normal leading-relaxed tracking-tight">
+          <div className={`transition-all duration-200 transform preserve-3d ${isSpinning ? 'scale-95 opacity-80 rotateX-6' : 'scale-100 opacity-100'}`}>
+            <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl text-white font-normal leading-relaxed tracking-tight drop-shadow-lg">
               “{currentItem.text}”
             </h1>
           </div>
 
           {currentItem.sourceSnippet && !isSpinning && (
-            <div className="pt-2">
-              <span className="inline-block px-3.5 py-1.5 rounded-full text-[11px] font-semibold bg-blue-500/10 border border-blue-500/30 text-cyan-300 shadow-sm">
+            <div className="pt-2 card-3d-pop">
+              <span className="inline-block px-4 py-1.5 rounded-full text-[11px] font-semibold bg-blue-500/15 border border-blue-500/40 text-cyan-300 shadow-md">
                 {currentItem.category === 'PROJECTS' || currentItem.category === 'ARCHITECTURE'
                   ? `In regards to your project: ${currentItem.sourceSnippet}`
                   : currentItem.category === 'EXPERIENCE'
@@ -236,24 +235,24 @@ export const ResumeWheelDrawer: React.FC<ResumeWheelDrawerProps> = ({
         </div>
       </div>
 
-      {/* Bottom Action Bar (Blue & Black Theme) */}
+      {/* Bottom Action Bar (3D Tactile Buttons) */}
       <div className="w-full flex flex-wrap items-center justify-center gap-4 pt-4">
         
         {/* Spin Wheel Button */}
         <button
           onClick={spinWheel}
           disabled={isSpinning}
-          className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-sm transition-all duration-200 shadow-xl shadow-blue-500/25 active:scale-95 disabled:opacity-50 min-w-[170px]"
+          className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl btn-3d-primary text-white font-bold text-sm disabled:opacity-50 min-w-[170px]"
         >
           <RotateCw className={`w-4 h-4 text-white ${isSpinning ? 'animate-spin' : ''}`} />
-          <span>{isSpinning ? 'Spinning (10s)...' : 'Spin Wheel'}</span>
+          <span>{isSpinning ? 'Spinning...' : 'Spin 3D Wheel'}</span>
         </button>
 
         {/* Start X min timer Button */}
         <button
           onClick={() => onStartTimer(currentItem.text, depth === 'DEEP' ? researchMinutes : speechMinutes)}
           disabled={isSpinning}
-          className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl bg-[#111622] hover:bg-[#1b2235] border border-blue-500/30 text-white font-bold text-sm transition-all duration-200 shadow-xl active:scale-95 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl btn-3d-dark text-white font-bold text-sm disabled:opacity-50"
         >
           <Timer className="w-4 h-4 text-emerald-400" />
           <span>Start {depth === 'DEEP' ? researchMinutes : speechMinutes} min timer</span>
@@ -263,7 +262,7 @@ export const ResumeWheelDrawer: React.FC<ResumeWheelDrawerProps> = ({
         <button
           onClick={() => onSelectQuestion(currentItem.text, currentItem)}
           disabled={isSpinning}
-          className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#111622] hover:bg-[#1b2235] border border-blue-500/30 text-gray-200 hover:text-white font-bold text-sm transition-all duration-200 active:scale-95 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl btn-3d-dark text-gray-200 hover:text-white font-bold text-sm disabled:opacity-50"
         >
           <Sparkles className="w-4 h-4 text-cyan-400" />
           <span>Practice Prompt</span>
@@ -272,7 +271,7 @@ export const ResumeWheelDrawer: React.FC<ResumeWheelDrawerProps> = ({
         {/* Settings Button */}
         <button
           onClick={() => setShowSettingsModal(true)}
-          className="p-3.5 rounded-2xl bg-[#111622] hover:bg-[#1b2235] border border-blue-500/30 text-gray-400 hover:text-white transition-all active:scale-95"
+          className="p-3.5 rounded-2xl btn-3d-dark text-gray-400 hover:text-white"
           title="Settings"
         >
           <Settings className="w-4 h-4" />

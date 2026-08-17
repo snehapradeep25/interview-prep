@@ -16,24 +16,141 @@
   font-family: var(--font-mono);
 }
 
+/* 3D Perspective & Preservation Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-2000 {
+  perspective: 2000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Tactile 3D Buttons */
+.btn-3d-primary {
+  position: relative;
+  background: linear-gradient(135deg, #2563eb, #06b6d4);
+  box-shadow: 0 6px 0 #1d4ed8, 0 12px 24px rgba(37, 99, 235, 0.4);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+}
+
+.btn-3d-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 #1d4ed8, 0 16px 30px rgba(6, 182, 212, 0.5);
+}
+
+.btn-3d-primary:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #1d4ed8, 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-3d-dark {
+  position: relative;
+  background: linear-gradient(135deg, #111622, #1b2235);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 0 #07090e, 0 10px 20px rgba(0, 0, 0, 0.5);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+}
+
+.btn-3d-dark:hover {
+  transform: translateY(-2px);
+  border-color: rgba(6, 182, 212, 0.7);
+  box-shadow: 0 8px 0 #07090e, 0 14px 25px rgba(6, 182, 212, 0.3);
+}
+
+.btn-3d-dark:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #07090e, 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* 3D Interactive Hover Cards */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 15px rgba(59, 130, 246, 0.1);
+}
+
+.card-3d:hover {
+  transform: translateY(-8px) rotateX(4deg) rotateY(-2deg) translateZ(15px);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), 0 0 35px rgba(6, 182, 212, 0.35);
+  border-color: rgba(6, 182, 212, 0.8);
+}
+
+.card-3d-pop {
+  transform: translateZ(30px);
+}
+
+/* 3D Wheel Stage & Cylinder Display */
+.wheel-stage-3d {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.wheel-card-3d {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 0 30px rgba(59, 130, 246, 0.3);
+}
+
+.wheel-hub-3d {
+  box-shadow: 
+    inset 0 4px 8px rgba(255, 255, 255, 0.3),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.8),
+    0 15px 35px rgba(6, 182, 212, 0.4);
+}
+
+/* 3D Floating Animations */
+@keyframes float3d {
+  0%, 100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg) translateZ(0);
+  }
+  50% {
+    transform: translateY(-12px) rotateX(3deg) rotateY(-3deg) translateZ(20px);
+  }
+}
+
+.animate-float-3d {
+  animation: float3d 5s ease-in-out infinite;
+}
+
+@keyframes spin3d {
+  0% {
+    transform: rotateY(0deg) rotateX(10deg);
+  }
+  100% {
+    transform: rotateY(360deg) rotateX(10deg);
+  }
+}
+
+.animate-spin-3d {
+  animation: spin3d 12s linear infinite;
+}
+
 /* Electric Blue & Cyan aesthetic glow effects */
 .anime-glow-blue {
-  box-shadow: 0 0 30px -5px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 35px -5px rgba(59, 130, 246, 0.45);
 }
 
 .anime-glow-cyan {
-  box-shadow: 0 0 30px -5px rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 35px -5px rgba(6, 182, 212, 0.45);
 }
 
 .anime-card-border {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .anime-card-border:hover {
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 25px rgba(59, 130, 246, 0.2);
-  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(59, 130, 246, 0.25);
 }
 
 /* Speech bubble tail effect */
@@ -82,3 +199,4 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #3b82f6;
 }
+

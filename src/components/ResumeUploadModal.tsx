@@ -7,7 +7,7 @@ import {
   generateResumeQuestions, 
   SAMPLE_RESUME_TEXT 
 } from '../services/resumeParser';
-import { Upload, FileText, CheckCircle2, Sparkles, AlertCircle, ArrowRight, ShieldCheck, Dices } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, Sparkles, AlertCircle, ArrowRight, Dices } from 'lucide-react';
 
 interface ResumeUploadModalProps {
   onSelectQuestion: (question: string, resumeData: ResumeData) => void;
@@ -106,18 +106,18 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
       </div>
 
       {!resumeData ? (
-        <div className="bg-[#111622] rounded-3xl p-6 sm:p-10 border border-blue-500/30 space-y-6 shadow-2xl">
+        <div className="bg-[#111622] rounded-3xl p-6 sm:p-10 border border-blue-500/30 space-y-6 shadow-2xl card-3d">
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => setShowPasteTab(false)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${!showPasteTab ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${!showPasteTab ? 'btn-3d-primary text-white shadow' : 'text-gray-400 hover:text-white'}`}
               >
                 File Upload (PDF / DOCX)
               </button>
               <button 
                 onClick={() => setShowPasteTab(true)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${showPasteTab ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${showPasteTab ? 'btn-3d-primary text-white shadow' : 'text-gray-400 hover:text-white'}`}
               >
                 Paste Resume Text
               </button>
@@ -148,8 +148,8 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
                 className="hidden" 
                 disabled={loading}
               />
-              <div className="space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+              <div className="space-y-4 preserve-3d">
+                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform shadow-lg shadow-cyan-500/20">
                   <Upload className="w-8 h-8 text-cyan-400" />
                 </div>
                 <div>
@@ -157,7 +157,7 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
                     {loading ? 'Analyzing Resume...' : 'Drop your resume file here or click to browse'}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Supports PDF, DOCX, or TXT (Max 5MB) • 100% In-Memory Privacy
+                    Supports PDF, DOCX, or TXT (Max 5MB)
                   </p>
                 </div>
               </div>
@@ -169,22 +169,17 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
                 onChange={e => setCustomText(e.target.value)}
                 placeholder="Paste your resume summary, skills, and projects here..."
                 rows={8}
-                className="w-full bg-[#07090e] rounded-2xl p-4 text-xs sm:text-sm text-gray-200 border border-blue-500/20 focus:border-cyan-400 outline-none resize-none font-mono"
+                className="w-full bg-[#07090e] rounded-2xl p-4 text-xs sm:text-sm text-gray-200 border border-blue-500/20 focus:border-cyan-400 outline-none resize-none font-mono shadow-inner"
               />
               <button
                 onClick={handleCustomPasteSubmit}
                 disabled={loading || !customText.trim()}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50"
+                className="w-full py-3.5 rounded-xl btn-3d-primary text-white font-bold text-sm shadow-lg disabled:opacity-50"
               >
                 {loading ? 'Processing Text...' : 'Generate Questions & Launch Wheel'}
               </button>
             </div>
           )}
-
-          <div className="flex items-center gap-2 text-xs text-gray-400 bg-white/5 p-3 rounded-xl border border-white/5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Resumes are parsed only in your browser memory for this session and never stored in any database.</span>
-          </div>
         </div>
       ) : (
         <div className="space-y-8">

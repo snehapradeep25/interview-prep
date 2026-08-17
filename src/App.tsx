@@ -211,10 +211,6 @@ export function App() {
             <span className="text-gray-600">•</span>
             <span>Master resume questions, build confidence, and land your dream role.</span>
           </div>
-
-          <p className="text-[11px] text-gray-600">
-            100% In-Memory Session Privacy • Zero Auth Required
-          </p>
         </div>
       </footer>
     </div>
