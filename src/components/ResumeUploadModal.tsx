@@ -93,16 +93,11 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-cyan-300 text-xs font-semibold">
           <FileText className="w-4 h-4 text-cyan-400" />
-          <span>Resume Interview Wheel</span>
+          <span>Spin</span>
         </div>
         <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-white">
-          {resumeData ? 'Generated Resume Questions' : 'Upload Your Resume'}
+          Master Interview Questions
         </h2>
-        <p className="text-gray-400 text-sm max-w-xl mx-auto">
-          {resumeData 
-            ? 'We extracted your key skills & projects. Spin the question wheel or pick a question directly.'
-            : 'Upload a PDF/DOCX resume. Questions are generated strictly from your actual experience—no invented facts.'}
-        </p>
       </div>
 
       {!resumeData ? (
@@ -176,7 +171,7 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
                 disabled={loading || !customText.trim()}
                 className="w-full py-3.5 rounded-xl btn-3d-primary text-white font-bold text-sm shadow-lg disabled:opacity-50"
               >
-                {loading ? 'Processing Text...' : 'Generate Questions & Launch Wheel'}
+                {loading ? 'Processing Text...' : 'Generate Questions & Launch'}
               </button>
             </div>
           )}

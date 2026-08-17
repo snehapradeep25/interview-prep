@@ -565,32 +565,35 @@ export function generateDeepProjectQuestions(
     }
   }
 
-  // Clean primary fallbacks if needed
-  const primaryProject = validProjects[0]?.title || 'your main project';
-  const primaryRole = validExperience[0]?.title || 'your software role';
+  // Clean primary fallbacks: Use real candidate project/role if available
+  const realProject = validProjects[0]?.title;
+  const realRole = validExperience[0]?.title;
   const primarySkill = uniqueSkills[0] || 'your core tech stack';
 
+  const projContext = realProject ? ` in "${realProject}"` : ' in your projects';
+  const roleContext = realRole ? ` as ${realRole}` : '';
+
   const naturalProjectQuestions = [
-    `How did you structure the modular directory and API layer in "${primaryProject}"?`,
-    `What technical trade-offs did you evaluate before choosing ${primarySkill} for "${primaryProject}"?`,
-    `How do you handle asynchronous data fetching, state caching, and re-rendering in "${primaryProject}"?`,
-    `Describe a time during development of "${primaryProject}" when you had to refactor code to improve performance.`,
-    `What monitoring, logging, or error tracking mechanisms did you set up in "${primaryProject}"?`,
-    `How did you ensure responsive UI, cross-browser compatibility, and accessibility in "${primaryProject}"?`,
-    `What database indexing or query optimizations did you implement to speed up data requests in "${primaryProject}"?`,
-    `How did you manage environment variables, secret keys, and deployment configs in "${primaryProject}"?`,
-    `During your role as ${primaryRole}, how did you prioritize technical debt versus shipping new features?`,
-    `In your position as ${primaryRole}, what code review principles did you enforce to maintain code quality?`,
-    `How did you handle edge-case error boundaries and network retries in "${primaryProject}"?`,
-    `What security mechanisms did you implement to protect user authentication tokens in "${primaryProject}"?`,
-    `How did you manage global application state vs component local state in "${primaryProject}"?`,
-    `What third-party libraries or packages did you integrate into "${primaryProject}", and why?`,
-    `How did you measure and optimize page load time or bundle size in "${primaryProject}"?`,
-    `What architectural patterns did you follow when designing the data models for "${primaryProject}"?`,
-    `Describe a challenging integration test or end-to-end test scenario you wrote for "${primaryProject}".`,
-    `How did you structure asynchronous error handling across your API requests in "${primaryProject}"?`,
-    `What memory optimization or garbage collection challenges did you encounter in "${primaryProject}"?`,
-    `How did you ensure data consistency when handling concurrent user requests in "${primaryProject}"?`
+    `How did you structure the modular directory and API layer${projContext}?`,
+    `What technical trade-offs did you evaluate before choosing ${primarySkill}${projContext}?`,
+    `How do you handle asynchronous data fetching, state caching, and re-rendering${projContext}?`,
+    `Describe a time during development${projContext} when you had to refactor code to improve performance.`,
+    `What monitoring, logging, or error tracking mechanisms did you set up${projContext}?`,
+    `How did you ensure responsive UI, cross-browser compatibility, and accessibility${projContext}?`,
+    `What database indexing or query optimizations did you implement to speed up data requests${projContext}?`,
+    `How did you manage environment variables, secret keys, and deployment configs${projContext}?`,
+    `During your work${roleContext}, how did you prioritize technical debt versus shipping new features?`,
+    `In your engineering role${roleContext}, what code review principles did you enforce to maintain code quality?`,
+    `How did you handle edge-case error boundaries and network retries${projContext}?`,
+    `What security mechanisms did you implement to protect user authentication tokens${projContext}?`,
+    `How did you manage global application state vs component local state${projContext}?`,
+    `What third-party libraries or packages did you integrate${projContext}, and why?`,
+    `How did you measure and optimize page load time or bundle size${projContext}?`,
+    `What architectural patterns did you follow when designing the data models${projContext}?`,
+    `Describe a challenging integration test or end-to-end test scenario you wrote${projContext}.`,
+    `How did you structure asynchronous error handling across your API requests${projContext}?`,
+    `What memory optimization or garbage collection challenges did you encounter${projContext}?`,
+    `How did you ensure data consistency when handling concurrent user requests${projContext}?`
   ];
 
   let fallbackIdx = 0;
@@ -600,12 +603,12 @@ export function generateDeepProjectQuestions(
 
     if (!seen.has(questionText)) {
       seen.add(questionText);
-      const isExp = questionText.includes(primaryRole);
+      const isExp = questionText.includes(roleContext) && Boolean(roleContext);
       uniqueBank.push(createItem(
         questionText,
         uniqueBank.length % 2 === 0 ? 'DEEP' : 'SURFACE',
         isExp ? 'EXPERIENCE' : 'PROJECTS',
-        isExp ? primaryRole : primaryProject
+        isExp ? (realRole || 'Work Experience') : (realProject || 'Technical Projects')
       ));
     }
 

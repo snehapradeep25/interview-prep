@@ -17,7 +17,7 @@ import { FeedbackScreen } from './components/FeedbackScreen';
 import { analyzeSpeakingSession } from './services/aiService';
 
 export function App() {
-  const [step, setStep] = useState<AppStep>('HOME');
+  const [step, setStep] = useState<AppStep>('RESUME_UPLOAD');
 
   const [session, setSession] = useState<PracticeSessionState>({
     type: 'RESUME_INTERVIEW',
@@ -34,7 +34,11 @@ export function App() {
   });
 
   const goHome = () => {
-    setStep('HOME');
+    if (session.resumeData) {
+      setStep('RESUME_WHEEL');
+    } else {
+      setStep('RESUME_UPLOAD');
+    }
   };
 
   const handleStartResumeInterview = () => {

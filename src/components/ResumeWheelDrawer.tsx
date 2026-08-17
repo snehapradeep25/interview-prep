@@ -210,7 +210,7 @@ export const ResumeWheelDrawer: React.FC<ResumeWheelDrawerProps> = ({
           
           <div className="tracking-[0.25em] text-[11px] font-extrabold uppercase text-cyan-400 font-mono flex items-center justify-center gap-2 card-3d-pop">
             <span className={`w-3 h-3 rounded-full wheel-hub-3d ${isSpinning ? 'bg-cyan-400 animate-ping' : 'bg-blue-500'}`} />
-            <span>{isSpinning ? 'SPINNING 3D WHEEL (6 SEC)...' : 'RESUME INTERVIEW TOPIC'}</span>
+            <span>{isSpinning ? 'SPINNING...' : 'TOPIC'}</span>
           </div>
 
           <div className={`transition-all duration-200 transform preserve-3d ${isSpinning ? 'scale-95 opacity-80 rotateX-6' : 'scale-100 opacity-100'}`}>
@@ -242,10 +242,10 @@ export const ResumeWheelDrawer: React.FC<ResumeWheelDrawerProps> = ({
         <button
           onClick={spinWheel}
           disabled={isSpinning}
-          className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl btn-3d-primary text-white font-bold text-sm disabled:opacity-50 min-w-[170px]"
+          className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl btn-3d-primary text-white font-bold text-sm disabled:opacity-50 min-w-[140px]"
         >
           <RotateCw className={`w-4 h-4 text-white ${isSpinning ? 'animate-spin' : ''}`} />
-          <span>{isSpinning ? 'Spinning...' : 'Spin 3D Wheel'}</span>
+          <span>{isSpinning ? 'Spinning...' : 'Spin'}</span>
         </button>
 
         {/* Start X min timer Button */}
