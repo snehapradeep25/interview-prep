@@ -30,12 +30,11 @@ function extractCleanLinesFromRawText(rawText: string): string {
   return cleanLines.join('\n');
 }
 
-// Bulletproof Browser PDF Extractor with Guaranteed 5-Second Max Timeout
+// PDF Extractor with Guaranteed 5-Second Max Timeout
 export async function extractPdfText(file: File): Promise<string> {
   return new Promise<string>((resolve) => {
     let resolved = false;
 
-    // Guaranteed 5-second timer limit — WILL NEVER HANG
     const fallbackTimer = setTimeout(async () => {
       if (!resolved) {
         resolved = true;
@@ -94,7 +93,7 @@ export async function extractPdfText(file: File): Promise<string> {
   });
 }
 
-// Helper to filter out binary PDF stream noise / gibberish lines
+// Filter out binary PDF stream noise / gibberish lines
 function isGarbageLine(line: string): boolean {
   if (line.length < 3) return true;
   if (/gmkw|\.\/bp|\b[a-z0-9]{8,}\b|v6io|bgbu|qvfl|stream|endstream|obj|endobj/i.test(line)) return true;
@@ -109,7 +108,23 @@ function isGarbageLine(line: string): boolean {
   return false;
 }
 
-// Clean title string from brackets, dates, or symbols
+// List of action verbs that signify bullet points / achievements rather than project or role titles
+const ACTION_VERBS = new Set([
+  'built', 'designed', 'implemented', 'developed', 'created', 'engineered', 'integrated',
+  'led', 'managed', 'optimized', 'reduced', 'increased', 'automated', 'scaled', 'deployed',
+  'configured', 'refactored', 'maintained', 'standardized', 'orchestrated', 'spearheaded',
+  'architected', 'wrote', 'crafted', 'facilitated', 'improved', 'launched', 'migrated',
+  'revamped', 'supervised', 'tested', 'transformed', 'utilized', 'utilised', 'constructed',
+  'headed', 'established', 'pioneered', 'streamlined', 'parsed', 'generated', 'achieved',
+  'collaborated', 'trained', 'coordinated', 'delivered', 'formulated', 'monitored', 'resolved'
+]);
+
+function startsWithActionVerb(text: string): boolean {
+  const firstWord = text.trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g, '') || '';
+  return ACTION_VERBS.has(firstWord);
+}
+
+// Clean title string from numbers, bullet markers, dates, or URLs
 function cleanTitleString(title: string): string {
   return title
     .replace(/^[-•*#\d.]+\s*/, '')
@@ -122,6 +137,7 @@ function cleanTitleString(title: string): string {
 
 export interface ExtractedDetail {
   title: string;
+  companyOrContext?: string;
   bullets: string[];
   techs: string[];
 }
@@ -134,12 +150,21 @@ export function parseResumeContent(rawText: string): ResumeData {
 
   const lines = rawLines.filter(l => !isGarbageLine(l));
   
-  // Candidate Name
-  const name = lines[0] && lines[0].length < 45 && !/summary|skills|experience|projects|education|contact/i.test(lines[0]) 
-    ? cleanTitleString(lines[0]) 
-    : 'Candidate';
+  // Extract Candidate Name
+  let name = 'Candidate';
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const line = lines[i];
+    if (
+      line.length > 2 && line.length < 40 &&
+      !/@|http|www|github|linkedin|summary|skills|experience|projects|education|contact|phone/i.test(line) &&
+      !startsWithActionVerb(line)
+    ) {
+      name = cleanTitleString(line);
+      break;
+    }
+  }
 
-  // Extract Tech Skills present in text
+  // Known Tech Skills
   const knownSkills = [
     'React', 'TypeScript', 'JavaScript', 'Python', 'Node.js', 'Next.js',
     'HTML', 'CSS', 'Tailwind', 'SQL', 'MongoDB', 'PostgreSQL', 'Docker',
@@ -169,20 +194,22 @@ export function parseResumeContent(rawText: string): ResumeData {
 
   const uniqueSkills = Array.from(new Set(extractedSkills));
 
-  // Extract Projects & Experiences using Ultra-Flexible Section Header Regex
+  // Extract Projects & Experiences
   const projectDetails: ExtractedDetail[] = [];
   const experienceDetails: ExtractedDetail[] = [];
   const rawHighlights: string[] = [];
 
-  let currentCategory: 'NONE' | 'PROJECTS' | 'EXPERIENCE' | 'EXTRACURRICULAR' = 'NONE';
+  let currentCategory: 'NONE' | 'PROJECTS' | 'EXPERIENCE' = 'NONE';
   let currentDetail: ExtractedDetail | null = null;
 
-  const projectHeaderRegex = /projects|portfolio|built|developed|applications|selected projects|personal projects|academic projects|technical projects/i;
-  const experienceHeaderRegex = /experience|work experience|employment|work history|professional experience|internship|roles/i;
+  const projectHeaderRegex = /^(?:projects|portfolio|built|developed|applications|selected projects|personal projects|academic projects|technical projects)/i;
+  const experienceHeaderRegex = /^(?:experience|work experience|employment|work history|professional experience|internship|roles)/i;
+  const otherSectionRegex = /^(?:extracurricular|activities|leadership|volunteer|awards|education|skills|summary|certifications)/i;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
+    // Check section headers
     if (projectHeaderRegex.test(line) && line.length < 50) {
       if (currentDetail && currentCategory === 'PROJECTS') projectDetails.push(currentDetail);
       if (currentDetail && currentCategory === 'EXPERIENCE') experienceDetails.push(currentDetail);
@@ -195,7 +222,7 @@ export function parseResumeContent(rawText: string): ResumeData {
       currentCategory = 'EXPERIENCE';
       currentDetail = null;
       continue;
-    } else if (/^EXTRACURRICULAR|^ACTIVITIES|^LEADERSHIP|^VOLUNTEER|^AWARDS|^EDUCATION|^SKILLS|^SUMMARY/i.test(line) && line.length < 50) {
+    } else if (otherSectionRegex.test(line) && line.length < 50) {
       if (currentDetail && currentCategory === 'PROJECTS') projectDetails.push(currentDetail);
       if (currentDetail && currentCategory === 'EXPERIENCE') experienceDetails.push(currentDetail);
       currentCategory = 'NONE';
@@ -203,32 +230,74 @@ export function parseResumeContent(rawText: string): ResumeData {
       continue;
     }
 
-    const cleanLine = line.replace(/^[-•*]\s*/, '').trim();
+    const isBulletMarker = /^[-•*#]|\d+\.|\w+\)/.test(line);
+    const cleanLine = line.replace(/^[-•*#\d.]+\s*/, '').trim();
+
     if (cleanLine.length < 4 || isGarbageLine(cleanLine)) continue;
 
-    const isBullet = line.startsWith('-') || line.startsWith('•') || line.startsWith('*') || cleanLine.length > 70;
-    const titleCandidate = cleanTitleString(cleanLine);
+    // Extract inline technologies in line e.g. "Project Name (React, Node.js)"
+    const inlineTechs: string[] = [];
+    const techParenMatch = line.match(/\(([^)]+)\)/);
+    if (techParenMatch) {
+      const parenthesized = techParenMatch[1];
+      knownSkills.forEach(s => {
+        if (parenthesized.toLowerCase().includes(s.toLowerCase())) {
+          inlineTechs.push(s);
+        }
+      });
+    }
+
+    const isActionBullet = isBulletMarker || startsWithActionVerb(cleanLine) || cleanLine.length > 80;
 
     if (currentCategory === 'PROJECTS') {
-      if (!isBullet && titleCandidate.length < 50 && titleCandidate.length > 3) {
+      if (!isActionBullet && cleanLine.length < 60) {
         if (currentDetail) projectDetails.push(currentDetail);
-        currentDetail = { title: titleCandidate, bullets: [], techs: [] };
-      } else if (cleanLine.length > 10) {
-        if (!currentDetail) currentDetail = { title: titleCandidate || 'Project Highlight', bullets: [], techs: [] };
+        const titleCandidate = cleanTitleString(cleanLine);
+        currentDetail = { 
+          title: titleCandidate || 'Project', 
+          bullets: [], 
+          techs: inlineTechs 
+        };
+      } else {
+        if (!currentDetail) {
+          currentDetail = { title: 'Personal Technical Project', bullets: [], techs: inlineTechs };
+        }
         currentDetail.bullets.push(cleanLine);
+        if (inlineTechs.length > 0) {
+          currentDetail.techs = Array.from(new Set([...currentDetail.techs, ...inlineTechs]));
+        }
         rawHighlights.push(cleanLine);
       }
     } else if (currentCategory === 'EXPERIENCE') {
-      if (!isBullet && titleCandidate.length < 50 && titleCandidate.length > 3) {
+      if (!isActionBullet && cleanLine.length < 60) {
         if (currentDetail) experienceDetails.push(currentDetail);
-        currentDetail = { title: titleCandidate, bullets: [], techs: [] };
-      } else if (cleanLine.length > 10) {
-        if (!currentDetail) currentDetail = { title: titleCandidate || 'Work Experience', bullets: [], techs: [] };
+        
+        let role = cleanLine;
+        let company = '';
+        if (cleanLine.includes('—') || cleanLine.includes('-') || cleanLine.includes('|') || cleanLine.includes(' at ')) {
+          const parts = cleanLine.split(/—|-|\||\bat\b/i);
+          role = parts[0].trim();
+          company = parts[1]?.trim() || '';
+        }
+
+        currentDetail = { 
+          title: cleanTitleString(role) || 'Software Engineer', 
+          companyOrContext: cleanTitleString(company), 
+          bullets: [], 
+          techs: inlineTechs 
+        };
+      } else {
+        if (!currentDetail) {
+          currentDetail = { title: 'Software Developer', bullets: [], techs: inlineTechs };
+        }
         currentDetail.bullets.push(cleanLine);
+        if (inlineTechs.length > 0) {
+          currentDetail.techs = Array.from(new Set([...currentDetail.techs, ...inlineTechs]));
+        }
         rawHighlights.push(cleanLine);
       }
     } else {
-      if (cleanLine.length > 25) {
+      if (cleanLine.length > 25 && startsWithActionVerb(cleanLine)) {
         rawHighlights.push(cleanLine);
       }
     }
@@ -237,56 +306,59 @@ export function parseResumeContent(rawText: string): ResumeData {
   if (currentDetail && currentCategory === 'PROJECTS') projectDetails.push(currentDetail);
   if (currentDetail && currentCategory === 'EXPERIENCE') experienceDetails.push(currentDetail);
 
-  // Deep Fallback Title Extractor: Scan raw lines to extract actual candidate project/experience titles if section headers missed
+  // Fallback: If no projects found under section headers, parse non-bullet lines containing project keywords
   if (projectDetails.length === 0) {
     lines.forEach((line) => {
       const clean = cleanTitleString(line);
       if (
-        clean.length > 4 && clean.length < 45 && 
+        clean.length > 4 && clean.length < 50 && 
         !isGarbageLine(clean) && 
         !clean.includes('@') && 
         !clean.includes('http') &&
-        /app|dashboard|system|platform|tool|service|website|api|developer|engineer|intern|lead|manager|assistant|project|bot|analytics|portal|hub/i.test(clean)
+        !startsWithActionVerb(clean) &&
+        /app|dashboard|system|platform|tool|service|website|api|bot|analytics|portal|hub|engine/i.test(clean)
       ) {
-        projectDetails.push({
-          title: clean,
-          bullets: [],
-          techs: []
-        });
+        projectDetails.push({ title: clean, bullets: [], techs: [] });
       }
     });
   }
 
-  // If still empty, pull any clean title-like short line from their text
-  if (projectDetails.length === 0) {
-    lines.forEach((line) => {
-      const clean = cleanTitleString(line);
-      if (clean.length > 4 && clean.length < 40 && !isGarbageLine(clean) && !/summary|skills|education|contact|phone|email/i.test(clean)) {
-        projectDetails.push({
-          title: clean,
-          bullets: [],
-          techs: []
-        });
-      }
-    });
-  }
+  // Ensure clean titles without Action Verbs or bullet text
+  const cleanProjects = projectDetails.map(p => ({
+    ...p,
+    title: cleanTitleString(p.title)
+  })).filter(p => p.title.length > 2 && !startsWithActionVerb(p.title));
+
+  const cleanExperience = experienceDetails.map(e => ({
+    ...e,
+    title: cleanTitleString(e.title)
+  })).filter(e => e.title.length > 2 && !startsWithActionVerb(e.title));
 
   const data: ResumeData = {
     name,
     summary: rawText.slice(0, 250) + '...',
     skills: uniqueSkills,
-    projects: projectDetails.map(p => ({ title: p.title, description: p.bullets[0] || 'Candidate project' })),
-    experience: experienceDetails.map(e => ({ role: e.title, company: '', duration: '' })),
+    projects: cleanProjects.map(p => ({ 
+      title: p.title, 
+      tech: p.techs.join(', ') || undefined,
+      description: p.bullets[0] || 'Technical project' 
+    })),
+    experience: cleanExperience.map(e => ({ 
+      role: e.title, 
+      company: e.companyOrContext || '', 
+      duration: '' 
+    })),
     education: ['Education listed on resume'],
     rawText
   };
 
-  data.questionBank = generateDeepProjectQuestions(data, projectDetails, experienceDetails, rawHighlights, uniqueSkills);
+  data.questionBank = generateDeepProjectQuestions(data, cleanProjects, cleanExperience, rawHighlights, uniqueSkills);
   return data;
 }
 
 /**
- * Generates 30 questions, ensuring AT LEAST 20+ questions are strictly focused on Projects & Work Experience with ZERO generic boilerplate.
+ * Generates up to 30 context-grounded technical questions based on the candidate's actual projects,
+ * work experience, bullet achievements, and tech stack.
  */
 export function generateDeepProjectQuestions(
   _data: ResumeData,
@@ -311,21 +383,25 @@ export function generateDeepProjectQuestions(
     sourceSnippet
   });
 
-  const validProjects = projectDetails.filter(p => p.title && !isGarbageLine(p.title) && p.title.length < 50);
-  const validExperience = experienceDetails.filter(e => e.title && !isGarbageLine(e.title) && e.title.length < 50);
-  const validHighlights = rawHighlights.filter(h => h && !isGarbageLine(h) && h.length < 120);
+  const validProjects = projectDetails.filter(p => p.title && !isGarbageLine(p.title) && p.title.length < 55);
+  const validExperience = experienceDetails.filter(e => e.title && !isGarbageLine(e.title) && e.title.length < 55);
 
-  // 1. Projects Questions
+  // 1. Projects Questions grounded in actual titles & bullets
   validProjects.forEach((proj) => {
     const title = proj.title;
+    const techsStr = proj.techs.length > 0 ? proj.techs.join(', ') : '';
 
+    // Core Architecture Question
     bank.push(createItem(
-      `In "${title}", how did you design the backend API architecture and handle data persistence?`,
+      techsStr 
+        ? `In "${title}" (${techsStr}), how did you structure the backend API architecture and manage data flow?`
+        : `In "${title}", how did you design the core software architecture and manage data flow?`,
       'SURFACE',
       'PROJECTS',
       title
     ));
 
+    // State & Component Hierarchy Question
     bank.push(createItem(
       `What state management strategy and component hierarchy did you choose for "${title}", and why?`,
       'SURFACE',
@@ -333,118 +409,149 @@ export function generateDeepProjectQuestions(
       title
     ));
 
+    // Deep Scalability & Security Question
     bank.push(createItem(
-      `What authentication, error handling, or security protocols did you build into "${title}"?`,
+      `If "${title}" experienced a 10x spike in concurrent users, which database query, network endpoint, or state mechanism would fail first?`,
+      'DEEP',
+      'ARCHITECTURE',
+      title
+    ));
+
+    // Deep Trade-off Question
+    bank.push(createItem(
+      `What were the toughest technical trade-offs or refactoring decisions you had to evaluate while building "${title}"?`,
       'DEEP',
       'PROJECTS',
       title
     ));
 
-    bank.push(createItem(
-      `If "${title}" experienced a 10x traffic spike, which part of your code or database queries would break first?`,
-      'DEEP',
-      'PROJECTS',
-      title
-    ));
-
-    bank.push(createItem(
-      `What testing framework or CI/CD workflow did you use to verify code quality in "${title}"?`,
-      'SURFACE',
-      'PROJECTS',
-      title
-    ));
-
-    bank.push(createItem(
-      `What major technical trade-offs did you evaluate while developing "${title}"?`,
-      'DEEP',
-      'PROJECTS',
-      title
-    ));
-
-    proj.bullets.forEach((b) => {
-      if (!isGarbageLine(b) && b.length > 15) {
+    // Specific Bullet-Grounded Questions
+    proj.bullets.forEach((bullet) => {
+      if (bullet.length > 18 && !isGarbageLine(bullet)) {
+        const shortBullet = bullet.length > 90 ? bullet.slice(0, 90) + '...' : bullet;
         bank.push(createItem(
-          `You noted "${b}" in "${title}" — walk me through the step-by-step technical implementation of this feature.`,
+          `You noted in "${title}": "${shortBullet}" — walk me through your step-by-step technical implementation.`,
           'DEEP',
           'PROJECTS',
           title
         ));
 
         bank.push(createItem(
-          `Regarding "${b}" — what performance bottlenecks or edge cases did you encounter while scaling this?`,
+          `Regarding "${shortBullet}" in "${title}" — what unexpected edge cases or performance bottlenecks did you encounter?`,
           'DEEP',
-          'PROJECTS',
+          'ARCHITECTURE',
           title
         ));
       }
     });
   });
 
-  // 2. Experience & Role Questions
+  // 2. Work Experience & Role Questions grounded in actual roles & bullets
   validExperience.forEach((exp) => {
-    const role = exp.title;
+    const roleTitle = exp.companyOrContext ? `${exp.title} at ${exp.companyOrContext}` : exp.title;
 
     bank.push(createItem(
-      `In your role as "${role}", what was your day-to-day engineering process and team collaboration workflow?`,
+      `In your role as ${roleTitle}, what was your day-to-day software development lifecycle and code review workflow?`,
       'SURFACE',
       'EXPERIENCE',
-      role
+      roleTitle
     ));
 
     bank.push(createItem(
-      `What was the most complex technical outage or architectural bug you debugged while working as "${role}"?`,
+      `What was the most challenging technical bug or production incident you diagnosed while working as ${roleTitle}?`,
       'DEEP',
       'EXPERIENCE',
-      role
+      roleTitle
     ));
 
-    bank.push(createItem(
-      `Describe a technical refactoring or code quality initiative you led during your role as "${role}".`,
-      'DEEP',
-      'EXPERIENCE',
-      role
-    ));
-
-    exp.bullets.forEach((b) => {
-      if (!isGarbageLine(b) && b.length > 15) {
+    exp.bullets.forEach((bullet) => {
+      if (bullet.length > 18 && !isGarbageLine(bullet)) {
+        const shortBullet = bullet.length > 90 ? bullet.slice(0, 90) + '...' : bullet;
         bank.push(createItem(
-          `During your role as "${role}", how did you specifically accomplish: "${b}"?`,
+          `During your time as ${roleTitle}, how did you specifically execute: "${shortBullet}"?`,
           'DEEP',
           'EXPERIENCE',
-          role
+          roleTitle
         ));
       }
     });
   });
 
-  // 3. Bullet Highlights
-  validHighlights.slice(0, 8).forEach((bullet) => {
-    if (bullet.length > 20 && !bullet.includes('http')) {
-      const sourceTitle = validProjects[0]?.title || validExperience[0]?.title || 'your technical experience';
+  // 3. Bullet Highlights Questions
+  rawHighlights.slice(0, 6).forEach((bullet) => {
+    if (bullet.length > 25 && !bullet.includes('http') && !isGarbageLine(bullet)) {
+      const shortBullet = bullet.length > 85 ? bullet.slice(0, 85) + '...' : bullet;
       bank.push(createItem(
-        `Your resume states: "${bullet}" — what exact tools, metrics, or benchmarks proved this result?`,
+        `Your resume mentions: "${shortBullet}" — what exact tools, metrics, or benchmarks did you use to validate this result?`,
         'DEEP',
-        'PROJECTS',
-        sourceTitle
+        'EXPERIENCE',
+        'Resume Highlight'
       ));
     }
   });
 
-  // 4. Tech Stack Specific Questions
-  uniqueSkills.forEach((skill) => {
-    bank.push(createItem(
-      `Where in your projects did you leverage ${skill}, and what specific libraries or design patterns did you use with it?`,
-      'SURFACE',
-      'SKILLS',
-      skill
-    ));
+  // 4. Technology-Specific Questions Grounded in Candidate's Stack
+  const techQuestionMap: Record<string, { surface: string; deep: string }> = {
+    'React': {
+      surface: 'Where in your projects did you leverage React, and how did you organize your component state vs custom hooks?',
+      deep: 'How do you prevent unnecessary component re-renders in React when dealing with frequent props updates or heavy state trees?'
+    },
+    'TypeScript': {
+      surface: 'How did you utilize TypeScript in your codebase to maintain strict type safety and documentation?',
+      deep: 'How do you leverage advanced TypeScript features (like generics, discriminated unions, or utility types) to prevent runtime bugs?'
+    },
+    'Node.js': {
+      surface: 'How did you structure your API routes, middleware, and async controllers in Node.js?',
+      deep: 'How do you handle unhandled promise rejections, CPU-heavy tasks, and event loop blockage in Node.js?'
+    },
+    'Python': {
+      surface: 'How did you structure your Python modules and handle package dependencies in your project?',
+      deep: 'What Python performance optimizations (like async/await concurrency or memory management) did you apply in your backend services?'
+    },
+    'PostgreSQL': {
+      surface: 'How did you design your relational database schema and write your SQL queries in PostgreSQL?',
+      deep: 'What indexing strategies, query plan analyses (EXPLAIN ANALYZE), or transaction isolation controls did you use in PostgreSQL?'
+    },
+    'MongoDB': {
+      surface: 'How did you design your document schemas and handle data relationships in MongoDB?',
+      deep: 'When designing MongoDB pipelines, how did you balance document embedding vs referencing to optimize read/write performance?'
+    },
+    'Docker': {
+      surface: 'How did you use Docker to standardize development environment setups across your projects?',
+      deep: 'How do you optimize Dockerfiles (e.g., using multi-stage builds and layer caching) to minimize production image size?'
+    },
+    'AWS': {
+      surface: 'Which AWS services (such as S3, EC2, or Lambda) did you integrate, and for what purposes?',
+      deep: 'How did you configure IAM roles, security groups, and deployment automation for your AWS infrastructure?'
+    },
+    'Tailwind': {
+      surface: 'How did you maintain a consistent design system and component styling using Tailwind CSS?',
+      deep: 'How do you optimize Tailwind CSS bundle size and ensure cross-browser responsiveness in production?'
+    },
+    'Jest': {
+      surface: 'What unit testing and integration testing strategies did you follow using Jest?',
+      deep: 'How did you handle mocking external APIs, database connections, and asynchronous timers in Jest test suites?'
+    }
+  };
 
-    bank.push(createItem(
-      `What are the most challenging memory, rendering, or concurrency bugs you've debugged when using ${skill}?`,
-      'DEEP',
-      'SKILLS',
-      skill
-    ));
+  uniqueSkills.forEach((skill) => {
+    if (techQuestionMap[skill]) {
+      bank.push(createItem(techQuestionMap[skill].surface, 'SURFACE', 'SKILLS', skill));
+      bank.push(createItem(techQuestionMap[skill].deep, 'DEEP', 'SKILLS', skill));
+    } else {
+      bank.push(createItem(
+        `Where in your projects did you leverage ${skill}, and what specific design patterns did you apply with it?`,
+        'SURFACE',
+        'SKILLS',
+        skill
+      ));
+      bank.push(createItem(
+        `What are the most challenging bugs or architectural limits you encountered while working with ${skill}?`,
+        'DEEP',
+        'SKILLS',
+        skill
+      ));
+    }
   });
 
   // Filter unique questions
@@ -458,12 +565,11 @@ export function generateDeepProjectQuestions(
     }
   }
 
-  // Derive Best Real Candidate Project Name (Zero Generic "core technical project" fallback)
-  const primaryProject = validProjects[0]?.title || validExperience[0]?.title || (uniqueSkills[0] ? `your ${uniqueSkills[0]} application` : 'your technical project');
-  const primaryRole = validExperience[0]?.title || validProjects[0]?.title || 'your software engineering position';
-  const primarySkill = uniqueSkills[0] || 'your primary tech stack';
+  // Clean primary fallbacks if needed
+  const primaryProject = validProjects[0]?.title || 'your main project';
+  const primaryRole = validExperience[0]?.title || 'your software role';
+  const primarySkill = uniqueSkills[0] || 'your core tech stack';
 
-  // 25 Natural Technical Question Variations (NO "(Part X)" suffixing)
   const naturalProjectQuestions = [
     `How did you structure the modular directory and API layer in "${primaryProject}"?`,
     `What technical trade-offs did you evaluate before choosing ${primarySkill} for "${primaryProject}"?`,
@@ -473,8 +579,8 @@ export function generateDeepProjectQuestions(
     `How did you ensure responsive UI, cross-browser compatibility, and accessibility in "${primaryProject}"?`,
     `What database indexing or query optimizations did you implement to speed up data requests in "${primaryProject}"?`,
     `How did you manage environment variables, secret keys, and deployment configs in "${primaryProject}"?`,
-    `During your role as "${primaryRole}", how did you prioritize technical debt versus shipping new features?`,
-    `In your position as "${primaryRole}", what code review principles did you enforce to maintain code quality?`,
+    `During your role as ${primaryRole}, how did you prioritize technical debt versus shipping new features?`,
+    `In your position as ${primaryRole}, what code review principles did you enforce to maintain code quality?`,
     `How did you handle edge-case error boundaries and network retries in "${primaryProject}"?`,
     `What security mechanisms did you implement to protect user authentication tokens in "${primaryProject}"?`,
     `How did you manage global application state vs component local state in "${primaryProject}"?`,
@@ -524,16 +630,16 @@ Energetic Full Stack Developer with 2+ years of experience building modern web a
 SKILLS
 Frontend: React, TypeScript, Next.js, Tailwind CSS, Redux, HTML5, CSS3
 Backend: Node.js, Express, Python, MongoDB, PostgreSQL, REST APIs
-Tools & DevOps: Git, Docker, Vercel, AWS S3, Jest
+Tools & DevOps: Git, Docker, Vercel, AWS, Jest
 
 PROJECTS
-1. E-Commerce Analytics Dashboard (React, TypeScript, Recharts)
-   - Built a real-time data visualizer tracking 10,000+ daily orders.
-   - Reduced dashboard load time by 40% using optimistic rendering and code-splitting.
+E-Commerce Analytics Dashboard (React, TypeScript, Recharts)
+- Reduced dashboard load time by 40% using optimistic rendering and code-splitting.
+- Built a real-time data visualizer tracking 10,000+ daily order transactions.
 
-2. AI Study Coach & Voice Assistant (Python, Node.js, OpenAI API)
-   - Created a speech-to-text practice tool for students preparing for exam presentations.
-   - Integrated audio processing and structured JSON AI scoring.
+AI Study Coach & Voice Assistant (Python, Node.js, OpenAI API)
+- Created a speech-to-text practice tool for students preparing for exam presentations.
+- Integrated audio stream processing and structured JSON AI scoring pipelines.
 
 EXPERIENCE
 Frontend Developer Intern — CloudTech Inc. (2023 - Present)
@@ -541,9 +647,10 @@ Frontend Developer Intern — CloudTech Inc. (2023 - Present)
 - Wrote unit tests in Jest achieving 85% code coverage across core components.
 
 EXTRACURRICULAR & LEADERSHIP
-- Hackathon Team Lead — Organized a 24-hour university web dev hackathon for 120+ participants.
-- Open Source Contributor — Contributed bug fixes to React ecosystem UI components.
+Hackathon Team Lead — Organized a 24-hour university web dev hackathon for 120+ participants.
+Open Source Contributor — Contributed bug fixes to React ecosystem UI components.
 
 EDUCATION
 B.S. in Computer Science — State University (2020 - 2024)
 `;
+
