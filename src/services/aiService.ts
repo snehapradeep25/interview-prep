@@ -1,4 +1,5 @@
 import type { AIFeedbackResponse } from '../types';
+import { generateMLQuestionsForTopic } from './mlQuestionGenerator';
 
 // Speech Recognition API typing
 declare global {
@@ -11,6 +12,10 @@ declare global {
 export interface AIServiceConfig {
   apiKey?: string;
   provider?: 'openai' | 'gemini' | 'demo';
+}
+
+export function generateTopicMLQuestions(topicTitle: string, category?: string): string[] {
+  return generateMLQuestionsForTopic(topicTitle, category);
 }
 
 export async function analyzeSpeakingSession(

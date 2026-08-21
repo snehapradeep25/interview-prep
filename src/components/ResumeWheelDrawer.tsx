@@ -125,8 +125,8 @@ export const ResumeWheelDrawer: React.FC<ResumeWheelDrawerProps> = ({
       {/* Top Header / Depth Switcher */}
       <div className="w-full flex flex-col items-center space-y-6">
         
-        {/* Top bar with back button */}
-        <div className="w-full flex items-center justify-start">
+        {/* Top bar with back button and ML Model status */}
+        <div className="w-full flex items-center justify-between">
           <button
             onClick={onCancel}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#111622] hover:bg-[#1b2235] text-gray-300 hover:text-white text-xs font-semibold border border-blue-500/20 transition-colors shadow-sm"
@@ -134,6 +134,11 @@ export const ResumeWheelDrawer: React.FC<ResumeWheelDrawerProps> = ({
             <ArrowLeft className="w-3.5 h-3.5 text-cyan-400" />
             <span>Home</span>
           </button>
+
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold shadow-md shadow-cyan-500/10">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <span>ML Model Engine Active</span>
+          </div>
         </div>
 
         {/* Depth Pill Switcher (Sleek Blue & Black Theme) */}

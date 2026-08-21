@@ -149,10 +149,10 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
                 </div>
                 <div>
                   <p className="font-heading font-bold text-lg text-white">
-                    {loading ? 'Analyzing Resume...' : 'Drop your resume file here or click to browse'}
+                    {loading ? 'Running ML Model & Analyzing Resume...' : 'Drop your resume file here or click to browse'}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Supports PDF, DOCX, or TXT (Max 5MB)
+                    Supports PDF, DOCX, or TXT • Automated ML Question Synthesis
                   </p>
                 </div>
               </div>
