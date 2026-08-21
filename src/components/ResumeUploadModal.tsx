@@ -8,7 +8,7 @@ import {
   SAMPLE_RESUME_TEXT 
 } from '../services/resumeParser';
 import { scanResumeWithLLMModel } from '../services/mlQuestionGenerator';
-import { Upload, FileText, CheckCircle2, Sparkles, AlertCircle, ArrowRight, Dices, Cpu } from 'lucide-react';
+import { Upload, CheckCircle2, Sparkles, AlertCircle, ArrowRight, Dices, Cpu } from 'lucide-react';
 
 interface ResumeUploadModalProps {
   onSelectQuestion: (question: string, resumeData: ResumeData) => void;
@@ -99,13 +99,16 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 select-none text-[#e0f2fe]">
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-cyan-300 text-xs font-semibold">
-          <FileText className="w-4 h-4 text-cyan-400" />
-          <span>Spin</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold shadow-lg shadow-cyan-500/10">
+          <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+          <span>ML & LLM Question Scanner Enabled</span>
         </div>
         <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-white">
           Master Interview Questions
         </h2>
+        <p className="text-xs text-gray-400 max-w-md mx-auto">
+          AI & Machine Learning models scan your resume to extract, categorize, and rank deep technical questions.
+        </p>
       </div>
 
       {!resumeData ? (
