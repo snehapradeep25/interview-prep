@@ -7,7 +7,8 @@ import {
   generateResumeQuestions, 
   SAMPLE_RESUME_TEXT 
 } from '../services/resumeParser';
-import { Upload, FileText, CheckCircle2, Sparkles, AlertCircle, ArrowRight, Dices } from 'lucide-react';
+import { scanResumeWithLLMModel } from '../services/mlQuestionGenerator';
+import { Upload, FileText, CheckCircle2, Sparkles, AlertCircle, ArrowRight, Dices, Cpu } from 'lucide-react';
 
 interface ResumeUploadModalProps {
   onSelectQuestion: (question: string, resumeData: ResumeData) => void;
@@ -28,9 +29,16 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
   const [customText, setCustomText] = useState<string>('');
   const [showPasteTab, setShowPasteTab] = useState<boolean>(false);
 
-  const processText = (text: string) => {
+  const processText = async (text: string) => {
     try {
       const data = parseResumeContent(text);
+      
+      // Attempt LLM model scan for zero-shot question generation
+      const llmQuestions = await scanResumeWithLLMModel(text);
+      if (llmQuestions && llmQuestions.length > 0) {
+        data.questionBank = [...llmQuestions, ...(data.questionBank || [])].slice(0, 30);
+      }
+
       const generatedQs = generateResumeQuestions(data);
       setResumeData(data);
       setQuestions(generatedQs);
@@ -145,7 +153,7 @@ export const ResumeUploadModal: React.FC<ResumeUploadModalProps> = ({
               />
               <div className="space-y-4 preserve-3d">
                 <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform shadow-lg shadow-cyan-500/20">
-                  <Upload className="w-8 h-8 text-cyan-400" />
+                  {loading ? <Cpu className="w-8 h-8 text-cyan-400 animate-spin" /> : <Upload className="w-8 h-8 text-cyan-400" />}
                 </div>
                 <div>
                   <p className="font-heading font-bold text-lg text-white">

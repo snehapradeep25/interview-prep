@@ -121,6 +121,64 @@ export async function getTransformersPipeline(): Promise<any> {
 }
 
 /**
+ * Scans full resume text using Google Gemini / LLM API to generate dynamic questions.
+ */
+export async function scanResumeWithLLMModel(
+  resumeText: string,
+  apiKey?: string
+): Promise<ResumeQuestionItem[] | null> {
+  const targetKey = apiKey || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  if (!targetKey) return null;
+
+  try {
+    const prompt = `You are a Principal Software Architect interviewing a candidate.
+Scan the following resume text carefully and extract 12 highly specific, realistic technical interview questions.
+Return ONLY valid JSON as a JSON array of objects with the keys:
+- "text": string (the interview question)
+- "depth": "SURFACE" or "DEEP"
+- "category": "PROJECTS" | "EXPERIENCE" | "ARCHITECTURE" | "SKILLS"
+- "sourceSnippet": string (short text snippet from resume that inspired the question)
+
+Resume Text:
+"""
+${resumeText.slice(0, 3000)}
+"""`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${targetKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json' }
+        })
+      }
+    );
+
+    if (!response.ok) return null;
+    const jsonResult = await response.json();
+    const rawText = jsonResult.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!rawText) return null;
+
+    const parsedArray = JSON.parse(rawText);
+    if (!Array.isArray(parsedArray)) return null;
+
+    let id = 1;
+    return parsedArray.map((q: any) => ({
+      id: `llm_q_${id++}`,
+      text: q.text || 'Walk me through your key experience.',
+      depth: (q.depth === 'DEEP' ? 'DEEP' : 'SURFACE') as QuestionDepth,
+      category: (q.category || 'PROJECTS') as ResumeCategory,
+      sourceSnippet: q.sourceSnippet || 'LLM Model Analysis'
+    }));
+  } catch (err) {
+    console.warn('LLM Model scanning notice:', err);
+    return null;
+  }
+}
+
+/**
  * Core ML Question Generator Engine
  */
 export function generateMLResumeQuestions(
